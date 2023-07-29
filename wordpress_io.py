@@ -103,10 +103,10 @@ def get_posts(header_parameters):
         return result
 
     except IOError as error:
-        print("Wordpress IO Error: ", error)
+        print("Wordpress: IO Error: ", error)
         result['status'] = STS_RESPONSE_ERROR
     except (requests.exceptions.InvalidJSONError, requests.exceptions.JSONDecodeError, TypeError) as error:
-        print('Wordpress JSON Error: ', error)
+        print('Wordpress: JSON Error: ', error)
         result['status'] = STS_JSON_ERROR
     except Exception as error:
         print(error)
@@ -168,7 +168,7 @@ def process_posts(process_parameters):
         return result
 
     except KeyError as error:
-        print(f'Error by paring the returned json object! Key: {error} not found!')
+        print(f'Wordpress: error by paring the returned json object! Key: {error} not found!')
     finally:
         return result
 
@@ -281,7 +281,7 @@ def client(executor):
                             if latest_modify_date is None or latest_modify_date < modify_date:
                                 latest_modify_date = modify_date
                         except ValueError as error:
-                            print('Date conversion error! ', error)
+                            print('Wordpress: date conversion error! ', error)
 
                         # Store the fully received result
                         p_io.protocol_object.append_posts(post_object)
@@ -289,9 +289,9 @@ def client(executor):
                         post_object.print()
 
         except KeyError as error:
-            print('Internal error, key not found: ', error)
+            print('Wordpress: internal error, key not found: ', error)
         except Exception as error:
-            print('Internal error: ', error)
+            print('Wordpress: internal error: ', error)
 
     # update the current_page
     current_page = last_page

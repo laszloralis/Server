@@ -1,34 +1,41 @@
 import json
 
 from shared_storage import SharedDict
+from websocket_io import WebsocketIO
+
 
 # #########################################################################
 # Protocol
 # #########################################################################
 
-
 # =========================================================================
 # class ProtocolData
 # =========================================================================
 class ProtocolData:
+    POST_ID = 'id'
+    TITLE = 'title'
+    DATE = 'date'
+    MODIFY_DATE = 'modify_date'
+    WORDS = 'words'
+    IS_UPDATED = 'is_updated'
 
     # =========================================================================
     def __init__(self, post_id, title, date, modify_date, words):
-        self.__datadict = {'id': post_id,
-                           'title': title,
-                           'date': date,
-                           'modify_date': modify_date,
-                           'words': words,
-                           'is_updated': True
+        self.__datadict = {ProtocolData.POST_ID: post_id,
+                           ProtocolData.TITLE: title,
+                           ProtocolData.DATE: date,
+                           ProtocolData.MODIFY_DATE: modify_date,
+                           ProtocolData.WORDS: words,
+                           ProtocolData.IS_UPDATED: True
                            }
 
     # =========================================================================
-    def id(self): return self.__datadict['id']
-    def title(self): return self.__datadict['title']
-    def date(self): return self.__datadict['date']
-    def modify_date(self): return self.__datadict['modify_date']
-    def words(self): return self.__datadict['words']
-    def is_updated(self): return self.__datadict['is_updated']
+    def id(self): return self.__datadict[ProtocolData.POST_ID]
+    def title(self): return self.__datadict[ProtocolData.TITLE]
+    def date(self): return self.__datadict[ProtocolData.DATE]
+    def modify_date(self): return self.__datadict[ProtocolData.MODIFY_DATE]
+    def words(self): return self.__datadict[ProtocolData.WORDS]
+    def is_updated(self): return self.__datadict[ProtocolData.IS_UPDATED]
 
     # =========================================================================
     def print(self):
@@ -47,74 +54,94 @@ class ProtocolData:
 # class Protocol
 # =========================================================================
 class Protocol:
+    __NEW_POSTS = 'new_posts'
+    __DELETED_POSTS = 'deleted_posts'
+    __CHANGED_POSTS = 'changed_posts'
+    __CLIENTS = 'clients'
+    __REQ = 'req'
+    __ACK = 'ack'
+    __ID_LIST = 'id_list'
+    __POST = 'post'
+    __OBJ = 'obj'
 
     # =========================================================================
     def __init__(self):
+        # Create websocketIO object with 'process_message' as the callback function
+        self.__websocket_object = WebsocketIO(self.process_message)
+        # Create the dictionaries and set
         self.__processed_posts = SharedDict()
-        self.__changed_posts = SharedDict({'+': [], '-': [], '!': []})
+        self.__changed_posts = SharedDict({Protocol.__NEW_POSTS: [],
+                                           Protocol.__DELETED_POSTS: [],
+                                           Protocol.__CHANGED_POSTS: [],
+                                           Protocol.__CLIENTS: 0
+                                           })
         self.__tmp_active_set = set()
 
     # =========================================================================
-    # =========================================================================
-    # SERVER
-    # - broadcasts the current changes
-    #   {'+': [], '-': [], '!': []}
-    # CLIENT
-    #   {'req': 'ack'}
-    # =========================================================================
-    def get_broadcast_message(self):
-        message = self.__changed_posts.json()
-        self.__changed_posts.reset()
-        return message
+    def infinite_io_loop(self):
+        self.__websocket_object.start_server()
 
     # =========================================================================
-    # =========================================================================
-    # CLIENT
-    #   {'req': 'ack'}
-    # =========================================================================
-    # CLIENT
-    # - Get available post id-s
-    #   {'req': 'id_list'}
-    # SERVER
-    # - Returns the available id-s
-    #   {ack: 'id_list', 'obj': [12345, 4321, ...]}
-    # =========================================================================
-    # CLIENT
-    # - Get words of selected post
-    #   {'req': 'post', id: 14333}
-    # SERVER
-    # - Returns the selected post
-    #   {ack: 'post', obj: {'id': 17444, title: 'This is a title', is_updated: True, words: {...}}
+    def notify_clients(self):
+        # =========================================================================
+        # SERVER
+        # - broadcasts the current changes
+        #   {'new_posts': [], 'deleted_posts': [], 'changed_posts': [], 'clients:' n }
+        # CLIENT
+        #   {'req': 'ack'}
+        # =========================================================================
+        self.__changed_posts[Protocol.__CLIENTS] = self.__websocket_object.get_client_count()
+        message = self.__changed_posts.json()
+        self.__changed_posts.reset()
+        self.__websocket_object.broadcast(message)
+
     # =========================================================================
     def process_message(self, message):
         answer = None
         try:
             json_msg = json.loads(message)
-            req = json_msg['req']
+            req = json_msg[Protocol.__REQ]
 
+            # =========================================================================
             # ack
-            if req == 'ack':
+            # =========================================================================
+            # CLIENT --> {'req': 'ack'}
+            # =========================================================================
+            if req == Protocol.__ACK:
                 # nothing to do...
                 pass
 
-            # id_list
-            elif req == 'id_list':
+            # =========================================================================
+            # id_list - Get available post id-s
+            # =========================================================================
+            # CLIENT --> {'req': 'id_list'}
+            #
+            # SERVER --> {'ack': 'id_list', 'obj': [12345, 4321, ...]}
+            # (Returns the available id-s)
+            # =========================================================================
+            elif req == Protocol.__ID_LIST:
                 # get the keys as a list
                 obj = list(self.__processed_posts.keys())
-                print(obj)
                 # create a string
-                answer = json.dumps({'ack': req, 'obj': obj})
+                answer = json.dumps({Protocol.__ACK: req, Protocol.__OBJ: obj})
 
-            # post
-            elif req == 'post':
+            # =========================================================================
+            # posts - Get words of selected post
+            # =========================================================================
+            # CLIENT --> {'req': 'post', 'id': 14333}
+            #
+            # SERVER --> {'ack': 'post', 'obj': {'id': 17444, title: 'This is a title', is_updated: True, words: {...}}
+            # (Returns the requested post or 'None'/null if the post not exists)
+            # =========================================================================
+            elif req == Protocol.__POST:
                 # get the ProtocolData Object as dictionary
-                obj = self.__processed_posts.get(json_msg['id'])
+                obj = self.__processed_posts.get(json_msg[ProtocolData.POST_ID])
                 # if it is a valid ProtocolData object, convert it to dictionary
                 # otherwise use it as None value
                 if obj is not None:
                     obj = obj.dict()
                 # create a string
-                answer = json.dumps({'ack': req, 'obj': obj})
+                answer = json.dumps({Protocol.__ACK: req, Protocol.__OBJ: obj})
             return answer
 
         except json.JSONDecodeError as error:
@@ -127,10 +154,10 @@ class Protocol:
         key = str(post.id())
         # New post?
         if self.__processed_posts.get(key) is None:
-            self.__changed_posts['+'].append(key)
+            self.__changed_posts[Protocol.__NEW_POSTS].append(key)
         # Modified post?
         else:
-            self.__changed_posts['!'].append(key)
+            self.__changed_posts[Protocol.__CHANGED_POSTS].append(key)
         self.__processed_posts[key] = post
 
     # =========================================================================
@@ -140,15 +167,15 @@ class Protocol:
 
     # =========================================================================
     def purge_inactive_posts(self):
-        self.__changed_posts['-'] = self.__processed_posts.purge(self.__tmp_active_set)
+        self.__changed_posts[Protocol.__DELETED_POSTS] = self.__processed_posts.purge(self.__tmp_active_set)
         pass
 
     # =========================================================================
     def get_post_count(self):
         return len(self.__processed_posts)
 
-
 # =========================================================================
 # Global Protocol Object
 # =========================================================================
+# create the Protocol object
 protocol_object = Protocol()

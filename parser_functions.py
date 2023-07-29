@@ -74,10 +74,14 @@ def parse_json(entry_content):
 
     # Sorting the map by key
     sorted_string_list = sorted(string_dict.items(), key=lambda x: x[0])
-    sorted_string_dict = dict(sorted_string_list)
+
+    print('LIST ', sorted_string_list)
+
+    # sorted_string_dict = dict(sorted_string_list)
+    #print('DICT ', sorted_string_dict)
 
     # store the content for possible manual checks
     entry_text = entry_text.replace("\n\n", "\n")
     entry_text = entry_text.replace("\t", " ")
 
-    return {'words': sorted_string_dict, 'content': entry_text}
+    return {'words': sorted_string_list, 'content': entry_text}
