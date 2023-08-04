@@ -16,8 +16,11 @@ class ProtocolData:
     TITLE = 'title'
     DATE = 'date'
     MODIFY_DATE = 'modify_date'
+    STATUS = 'status'
     WORDS = 'words'
-    IS_UPDATED = 'is_updated'
+
+    STS_NEW = 'new'
+    STS_MODIFIED = 'modified'
 
     # =========================================================================
     def __init__(self, post_id, title, date, modify_date, words):
@@ -25,8 +28,8 @@ class ProtocolData:
                            ProtocolData.TITLE: title,
                            ProtocolData.DATE: date,
                            ProtocolData.MODIFY_DATE: modify_date,
-                           ProtocolData.WORDS: words,
-                           ProtocolData.IS_UPDATED: True
+                           ProtocolData.STATUS: ProtocolData.STS_NEW,
+                           ProtocolData.WORDS: words
                            }
 
     # =========================================================================
@@ -34,8 +37,10 @@ class ProtocolData:
     def title(self): return self.__datadict[ProtocolData.TITLE]
     def date(self): return self.__datadict[ProtocolData.DATE]
     def modify_date(self): return self.__datadict[ProtocolData.MODIFY_DATE]
+    def status(self): return self.__datadict[ProtocolData.STATUS]
     def words(self): return self.__datadict[ProtocolData.WORDS]
-    def is_updated(self): return self.__datadict[ProtocolData.IS_UPDATED]
+    def mark_new(self): self.__datadict[ProtocolData.STATUS] = ProtocolData.STS_NEW
+    def mark_modified(self): self.__datadict[ProtocolData.STATUS] = ProtocolData.STS_MODIFIED
 
     # =========================================================================
     def print(self):
@@ -130,7 +135,7 @@ class Protocol:
             # =========================================================================
             # CLIENT --> {'req': 'post', 'id': 14333}
             #
-            # SERVER --> {'ack': 'post', 'obj': {'id': 17444, title: 'This is a title', is_updated: True, words: {...}}
+            # SERVER --> {'ack': 'post', 'obj': {'id': 17444, title: 'This is a title', status: ***, words: {...}}
             # (Returns the requested post or 'None'/null if the post not exists)
             # =========================================================================
             elif req == Protocol.__POST:
@@ -154,9 +159,13 @@ class Protocol:
         key = str(post.id())
         # New post?
         if self.__processed_posts.get(key) is None:
+            # the default post status is new thus we simply store it
             self.__changed_posts[Protocol.__NEW_POSTS].append(key)
         # Modified post?
         else:
+            # mark the post as modified
+            post.mark_modified()
+            #store it
             self.__changed_posts[Protocol.__CHANGED_POSTS].append(key)
         self.__processed_posts[key] = post
 
@@ -173,6 +182,7 @@ class Protocol:
     # =========================================================================
     def get_post_count(self):
         return len(self.__processed_posts)
+
 
 # =========================================================================
 # Global Protocol Object

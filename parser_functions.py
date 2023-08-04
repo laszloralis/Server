@@ -44,7 +44,9 @@ def filter_word(word):
 def parse_json(entry_content):
     # Currently regexp is used to fix entries like
     # <b>I</b><span style="font-weight: 300;">ntegration  -->  Integration
+    # <strong>V</strong>olatility                         -->  Volatility
     # TODO: search a solution with soup instead of regexp
+    entry_content = re.sub(r'<strong>|</strong>', '', entry_content)
     entry_content = re.sub(r'<span.*?>', '<b>', entry_content)
     entry_content = re.sub(r'</span>', '</b>', entry_content)
     entry_content = re.sub(r'</b><b>', '', entry_content)

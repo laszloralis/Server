@@ -162,6 +162,10 @@ def process_posts(process_parameters):
                 parse_result['words']
             )
 
+            #print('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+            #print(parse_result['content'])
+            #print('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+
             result['posts'].append(protocol_data)
 
         result['state'] = ST_RESULT_OK
