@@ -162,9 +162,9 @@ def process_posts(process_parameters):
                 parse_result['words']
             )
 
-            #print('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
-            #print(parse_result['content'])
-            #print('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+            # print('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+            # print(parse_result['content'])
+            # print('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
 
             result['posts'].append(protocol_data)
 
@@ -255,8 +255,16 @@ def client(executor):
                         #  - mark every post in the dictionary, if we found the same entry in the received posts
                         #    (comparing the post-id-s)
                         #  - delete the not marked posts and send a broadcast to inform the clients
-                        #    (global_deleted_id_dict can cleared after the broadcast)
-                        pass
+                        if check_page < check_pages:
+                            # mark the received id-s as active
+                            for post_object in result['posts']:
+                                p_io.protocol_object.mark_post_as_active(post_object.id)
+                            # select the next page
+                            check_page = check_page + 1
+                        else:
+                            # every post was checked. delete the inactive posts from our memory-storage
+                            p_io.protocol_object.purge_inactive_posts();
+                            check_page = 1
                     else:
                         # set the check to the 1. page again
                         check_page = 1

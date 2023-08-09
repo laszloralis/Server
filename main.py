@@ -24,7 +24,7 @@ def main_loop():
             wp_client_pt.print_duration(True)
 
             # Broadcast (new/changed/deleted items)...
-            #p_io.protocol_object.notify_clients()
+            p_io.protocol_object.notify_clients()
 
             # If every post received then go to sleep (see UPDATE_PERIOD, default is ~10 sec)
             # otherwise sleep 0.1 sec
