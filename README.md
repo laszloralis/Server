@@ -40,5 +40,6 @@
 You will need Python interpreter (the project was developed/tested with v3.9)
 
 You should also install a few packages:
-- beautifulsoup
+- beautifulsoup4
 - websockets
+- requests
