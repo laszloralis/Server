@@ -32,7 +32,11 @@
   
 **shared_storage.py**
 
-- a simple thread-safe storage, used by protocol_io 
+- a simple thread-safe storage, used by protocol_io
+
+**performance_timer.py**
+
+- just for time-measurements and test purposes
 
 
 ## Requirements:
