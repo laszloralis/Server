@@ -177,7 +177,7 @@ class Protocol:
     # =========================================================================
     def purge_inactive_posts(self):
         self.__changed_posts[Protocol.__DELETED_POSTS] = self.__processed_posts.purge(self.__tmp_active_set)
-        pass
+        self.__tmp_active_set.clear()
 
     # =========================================================================
     def get_post_count(self):

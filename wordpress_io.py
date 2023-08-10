@@ -250,7 +250,8 @@ def client(executor):
 
                     # test if there is any deleted post...
                     if all_result_posts < p_io.protocol_object.get_post_count():
-                        # TODO - at least one post was deleted... test every post entry in our dictionary...
+                        # at least one post was deleted!
+                        # we should test every post in our dictionary:
                         #  - increment check_page in every loop until check_pages reached
                         #  - mark every post in the dictionary, if we found the same entry in the received posts
                         #    (comparing the post-id-s)
@@ -258,7 +259,7 @@ def client(executor):
                         if check_page < check_pages:
                             # mark the received id-s as active
                             for post_object in result['posts']:
-                                p_io.protocol_object.mark_post_as_active(post_object.id)
+                                p_io.protocol_object.mark_post_as_active(post_object.id())
                             # select the next page
                             check_page = check_page + 1
                         else:
