@@ -4,7 +4,7 @@
 
 - the server requests the blog posts from 'https://www.thekey.academy/wp-json/wp/v2/posts'
 - parses the content and counts the words
-- sends the result to the connected clients via websocket protocol (on 'localhost', port 8000, without any encription)
+- sends the result to the connected clients via websocket protocol (on 'localhost', port 8000, without any encryption)
 
 ## Files:
 
